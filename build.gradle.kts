@@ -1,6 +1,6 @@
 plugins {
     java
-    id("io.papermc.paperweight.userdev") version "1.7.1" apply false
+    id("io.papermc.paperweight.userdev") version "1.7.7" apply false
 }
 
 repositories {
@@ -12,10 +12,10 @@ repositories {
 }
 
 dependencies {
-    compileOnly("org.spigotmc:spigot-api:1.20.4-R0.1-SNAPSHOT")
-    compileOnly("com.comphenix.protocol:ProtocolLib:5.1.0")
+    compileOnly("org.spigotmc:spigot-api:1.21.4-R0.1-SNAPSHOT")
+    compileOnly("com.comphenix.protocol:ProtocolLib:5.3.0")
     compileOnly("com.cjcrafter:mechanicscore:3.4.1")
-    compileOnly("com.sk89q.worldedit:worldedit-bukkit:7.2.13")
+    compileOnly("com.sk89q.worldedit:worldedit-bukkit:7.3.9")
 
     // adventure
     compileOnly("net.kyori:adventure-api:4.15.0")
