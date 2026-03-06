@@ -1,7 +1,7 @@
 import net.minecrell.pluginyml.bukkit.BukkitPluginDescription.PluginLoadOrder.STARTUP
 
 group = "me.cjcrafter"
-version = "3.7.3"
+version = "3.8.0"
 
 plugins {
     `java-library`
@@ -34,6 +34,7 @@ dependencies {
     implementation(project(":Biome_1_20_R3", "reobf"))
     implementation(project(":Biome_1_20_R4", "reobf"))
     implementation(project(":Biome_1_21_R1", "reobf"))
+    implementation(project(":Biome_1_21_R3", "reobf"))
 }
 
 java {
@@ -54,6 +55,7 @@ tasks.shadowJar {
         include(project(":Biome_1_20_R3"))
         include(project(":Biome_1_20_R4"))
         include(project(":Biome_1_21_R1"))
+        include(project(":Biome_1_21_R3"))
 
         relocate("org.bstats", "me.cjcrafter.biomemanager.lib.bstats") {
             include(dependency("org.bstats:"))
