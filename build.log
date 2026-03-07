@@ -1,0 +1,7 @@
+﻿:executing 'extract libraries and server from downloaded jar'
+:executing 'filter vanilla server jar'
+:executing 'generate mappings'
+:executing 'remap minecraft server jar'
+:executing 'fix minecraft server jar'
+:executing 'access transform minecraft server jar'
+:executing 'decompile transformed minecraft server jar'

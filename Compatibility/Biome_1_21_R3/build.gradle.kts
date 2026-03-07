@@ -11,16 +11,15 @@ repositories {
 }
 
 dependencies {
-    paperweight.paperDevBundle("1.21-R0.1-SNAPSHOT")
+    paperweight.paperDevBundle("1.21.4-R0.1-SNAPSHOT")
     implementation(project(":"))
-    compileOnly("org.spigotmc:spigot-api:1.21-R0.1-SNAPSHOT")
     compileOnly("com.cjcrafter:mechanicscore:3.4.1")
     compileOnly("com.comphenix.protocol:ProtocolLib:5.3.0")
 }
 
 tasks {
     compileJava {
-        options.encoding = Charsets.UTF_8.name() // We want UTF-8 for everything
+        options.encoding = Charsets.UTF_8.name()
         options.release.set(21)
     }
 }
@@ -30,6 +29,7 @@ java {
         languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
+
 val reobf = configurations.maybeCreate("reobf")
 reobf.isCanBeConsumed = true
 reobf.isCanBeResolved = false

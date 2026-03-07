@@ -1,21 +1,21 @@
 plugins {
     java
-    id("io.papermc.paperweight.userdev") version "1.7.1" apply false
+    id("io.papermc.paperweight.userdev") version "2.0.0-beta.14" apply false
 }
 
 repositories {
     mavenCentral()
-
+    maven("https://repo.papermc.io/repository/maven-public/") // Paper
     maven(url="https://hub.spigotmc.org/nexus/content/repositories/snapshots/") // Spigot
     maven(url="https://repo.dmulloy2.net/repository/public/") // ProtocolLib
     maven(url="https://maven.enginehub.org/repo/") // WorldEdit
 }
 
 dependencies {
-    compileOnly("org.spigotmc:spigot-api:1.20.4-R0.1-SNAPSHOT")
-    compileOnly("com.comphenix.protocol:ProtocolLib:5.1.0")
+    compileOnly("org.spigotmc:spigot-api:1.18.2-R0.1-SNAPSHOT")
+    compileOnly("com.comphenix.protocol:ProtocolLib:5.3.0")
     compileOnly("com.cjcrafter:mechanicscore:3.4.1")
-    compileOnly("com.sk89q.worldedit:worldedit-bukkit:7.2.13")
+    compileOnly("com.sk89q.worldedit:worldedit-bukkit:7.3.9")
 
     // adventure
     compileOnly("net.kyori:adventure-api:4.15.0")
@@ -24,6 +24,13 @@ dependencies {
     compileOnly("net.kyori:adventure-text-minimessage:4.15.0")
 
     implementation("org.bstats:bstats-bukkit:3.0.1")
+}
+
+configurations.all {
+    resolutionStrategy {
+        force("com.google.code.gson:gson:2.11.0")
+        force("com.google.guava:guava:32.1.3-jre")
+    }
 }
 
 java {
@@ -35,7 +42,7 @@ java {
 tasks {
     compileJava {
         options.encoding = Charsets.UTF_8.name() // We want UTF-8 for everything
-        options.release.set(16)
+        options.release.set(21)
     }
     javadoc {
         options.encoding = Charsets.UTF_8.name() // We want UTF-8 for everything
