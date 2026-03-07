@@ -35,9 +35,12 @@ import java.util.IdentityHashMap;
 import static me.deecaad.core.utils.ReflectionUtil.*;
 
 /**
- * Wrapper de bioma para Minecraft 1.21.4 (mapeamento R3).
+ * Wrapper de bioma para Minecraft 1.21.11 (Paper mapeamento R7).
+ * 
+ * Esta versao usa as APIs mais recentes do Paper 1.21.11 com
+ * tratamento adequado para as mudancas no sistema de registro.
  */
-public class BiomeWrapper_1_21_R3 implements BiomeWrapper {
+public class BiomeWrapper_1_21_R7 implements BiomeWrapper {
 
     private static final Field climateSettingsField;
     private static final Field temperatureAdjustmentField;
@@ -56,6 +59,8 @@ public class BiomeWrapper_1_21_R3 implements BiomeWrapper {
         mobSettingsField = getField(Biome.class, MobSpawnSettings.class);
         particleDensityField = getField(AmbientParticleSettings.class, float.class);
         specialEffectsField = getField(Biome.class, BiomeSpecialEffects.class);
+
+        // Campos para manipulacao do registry frozen state
         frozenField = getField(MappedRegistry.class, boolean.class);
         intrusiveHoldersField = getField(MappedRegistry.class, IdentityHashMap.class);
     }
@@ -67,7 +72,10 @@ public class BiomeWrapper_1_21_R3 implements BiomeWrapper {
     private boolean isExternalPlugin;
     private boolean isDirty;
 
-    public BiomeWrapper_1_21_R3(Biome biome) {
+    /**
+     * Construtor para biomas vanilla existentes.
+     */
+    public BiomeWrapper_1_21_R7(Biome biome) {
         Registry<Biome> biomes = MinecraftServer.getServer().registryAccess().lookupOrThrow(Registries.BIOME);
 
         this.key = NamespacedKey.fromString(biomes.getKey(biome).toString());
@@ -83,19 +91,24 @@ public class BiomeWrapper_1_21_R3 implements BiomeWrapper {
         isExternalPlugin = !key.getNamespace().equals(NamespacedKey.MINECRAFT);
     }
 
-    public BiomeWrapper_1_21_R3(NamespacedKey key, BiomeWrapper_1_21_R3 base) {
+    /**
+     * Construtor para biomas customizados.
+     */
+    public BiomeWrapper_1_21_R7(NamespacedKey key, BiomeWrapper_1_21_R7 base) {
         Registry<Biome> biomes = MinecraftServer.getServer().registryAccess().lookupOrThrow(Registries.BIOME);
 
         this.key = key;
         this.base = biomes.getValue(ResourceLocation.fromNamespaceAndPath(base.getKey().getNamespace(), base.getKey().getKey()));
 
         reset();
+
         isDirty = true;
 
         if (key.equals(base.getKey())) {
             Biome temp = this.biome;
             this.biome = this.base;
             this.base = temp;
+
             isVanilla = true;
             isDirty = false;
         }
@@ -207,15 +220,19 @@ public class BiomeWrapper_1_21_R3 implements BiomeWrapper {
         }
 
         if (effects.getBackgroundMusic().isPresent()) {
+            // Em 1.21.11, getBackgroundMusic pode retornar diferentes tipos
+            // dependendo da configuracao. Tratamos ambos os casos.
             Object musicObj = effects.getBackgroundMusic().get();
             Music music;
             if (musicObj instanceof Music m) {
                 music = m;
             } else if (musicObj instanceof net.minecraft.util.random.SimpleWeightedRandomList<?> list) {
+                // Se for uma lista ponderada, pegamos o primeiro elemento
                 @SuppressWarnings("unchecked")
                 var musicList = (net.minecraft.util.random.SimpleWeightedRandomList<Music>) list;
                 music = musicList.unwrap().get(0).data();
             } else {
+                // Fallback - tenta cast direto
                 music = (Music) musicObj;
             }
 
@@ -244,13 +261,15 @@ public class BiomeWrapper_1_21_R3 implements BiomeWrapper {
                 .skyColor(builder.getSkyColor())
                 .grassColorModifier(BiomeSpecialEffects.GrassColorModifier.valueOf(builder.getGrassColorModifier().trim().toUpperCase()));
 
-        if (builder.getGrassColorOverride() != -1)
+        if (builder.getGrassColorOverride() != -1) {
             a.grassColorOverride(builder.getGrassColorOverride());
-        if (builder.getFoliageColorOverride() != -1)
+        }
+        if (builder.getFoliageColorOverride() != -1) {
             a.foliageColorOverride(builder.getFoliageColorOverride());
-        if (builder.getAmbientSound() != null)
+        }
+        if (builder.getAmbientSound() != null) {
             a.ambientLoopSound(getSound(builder.getAmbientSound()));
-
+        }
         if (particle.particle() != null) {
             try {
                 RegistryAccess access = ((CraftServer) Bukkit.getServer()).getServer().registryAccess();
@@ -260,12 +279,15 @@ public class BiomeWrapper_1_21_R3 implements BiomeWrapper {
                 BiomeManager.inst().debug.log(LogLevel.ERROR, "Could not set particle: " + particle, ex);
             }
         }
-        if (caveSettings.sound() != null)
+        if (caveSettings.sound() != null) {
             a.ambientMoodSound(new AmbientMoodSettings(getSound(caveSettings.sound()), caveSettings.tickDelay(), caveSettings.searchOffset(), caveSettings.soundOffset()));
-        if (cave.sound() != null)
+        }
+        if (cave.sound() != null) {
             a.ambientAdditionsSound(new AmbientAdditionsSettings(getSound(cave.sound()), cave.tickChance()));
-        if (music.sound() != null)
+        }
+        if (music.sound() != null) {
             a.backgroundMusic(new Music(getSound(music.sound()), music.minDelay(), music.maxDelay(), music.isOverride()));
+        }
 
         ReflectionUtil.setField(specialEffectsField, biome, a.build());
     }
@@ -295,15 +317,19 @@ public class BiomeWrapper_1_21_R3 implements BiomeWrapper {
             throw new InternalError(biomes + " was not a writable registry");
 
         if (isCustom) {
+            // Descongelar o registry temporariamente
             ReflectionUtil.setField(frozenField, biomes, false);
 
+            // Criar mapa de intrusive holders se necessario
             Object currentHolders = ReflectionUtil.invokeField(intrusiveHoldersField, biomes);
-            if (currentHolders == null)
+            if (currentHolders == null) {
                 ReflectionUtil.setField(intrusiveHoldersField, biomes, new IdentityHashMap<>());
+            }
 
             writable.createIntrusiveHolder(biome);
             writable.register(resource, biome, RegistrationInfo.BUILT_IN);
 
+            // Recongelar o registry
             ReflectionUtil.setField(intrusiveHoldersField, biomes, null);
             ReflectionUtil.setField(frozenField, biomes, true);
         }
@@ -340,8 +366,9 @@ public class BiomeWrapper_1_21_R3 implements BiomeWrapper {
     private static Holder<SoundEvent> getSound(String sound) {
         ResourceLocation key = ResourceLocation.tryParse(sound);
         SoundEvent existing = BuiltInRegistries.SOUND_EVENT.getValue(key);
-        if (existing == null)
+        if (existing == null) {
             existing = SoundEvent.createVariableRangeEvent(key);
+        }
         return Holder.direct(existing);
     }
 

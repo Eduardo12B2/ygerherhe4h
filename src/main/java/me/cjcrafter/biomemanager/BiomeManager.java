@@ -125,8 +125,10 @@ public class BiomeManager extends JavaPlugin {
     public void saveToConfig() {
         debug.info("Saving biomes to config");
 
-        // Save biome variations
-        biomeRandomizer.save();
+        // Save biome variations (null check for partial initialization failure)
+        if (biomeRandomizer != null) {
+            biomeRandomizer.save();
+        }
 
         // All custom biomes are stored in this folder, make sure it exists.
         File overridesFolder = new File(getDataFolder(), "biomes");

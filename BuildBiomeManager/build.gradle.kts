@@ -1,7 +1,7 @@
 import net.minecrell.pluginyml.bukkit.BukkitPluginDescription.PluginLoadOrder.STARTUP
 
 group = "me.cjcrafter"
-version = "3.8.0"
+version = "3.9.0"
 
 plugins {
     `java-library`
@@ -35,6 +35,7 @@ dependencies {
     implementation(project(":Biome_1_20_R4", "reobf"))
     implementation(project(":Biome_1_21_R1", "reobf"))
     implementation(project(":Biome_1_21_R3", "reobf"))
+    implementation(project(":Biome_1_21_R7", "reobf"))
 }
 
 java {
@@ -56,13 +57,13 @@ tasks.shadowJar {
         include(project(":Biome_1_20_R4"))
         include(project(":Biome_1_21_R1"))
         include(project(":Biome_1_21_R3"))
+        include(project(":Biome_1_21_R7"))
 
         relocate("org.bstats", "me.cjcrafter.biomemanager.lib.bstats") {
             include(dependency("org.bstats:"))
         }
     }
 
-    // This doesn't actually include any dependencies, this relocates all references
-    // to the mechanics core lib.
-    relocate("net.kyori", "me.deecaad.core.lib")
+    // MechanicsCore 4.2.5+ uses Paper's native Adventure API, no longer shaded
+    // DO NOT relocate net.kyori - it breaks compatibility with modern MechanicsCore
 }

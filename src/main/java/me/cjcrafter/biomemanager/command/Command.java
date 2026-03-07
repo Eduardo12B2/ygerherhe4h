@@ -6,7 +6,6 @@ import me.cjcrafter.biomemanager.SpecialEffectsBuilder;
 import me.cjcrafter.biomemanager.compatibility.BiomeCompatibilityAPI;
 import me.cjcrafter.biomemanager.compatibility.BiomeWrapper;
 import me.cjcrafter.biomemanager.listeners.BiomeRandomizer;
-import me.deecaad.core.MechanicsCore;
 import me.deecaad.core.commands.*;
 import me.deecaad.core.commands.arguments.*;
 import me.deecaad.core.commands.wrappers.BiomeHolder;
@@ -125,7 +124,7 @@ public class Command {
                                     .color(enable ? NamedTextColor.GREEN : NamedTextColor.YELLOW)
                                     .hoverEvent(text("Click to " + (enable ? "Disable" : "Enable")))
                                     .clickEvent(ClickEvent.runCommand("/biomemanager editor " + !enable));
-                            MechanicsCore.getPlugin().adventure.player(sender).sendMessage(component);
+                            sender.sendMessage(component);
                         })))
 
                 .withSubcommand(new CommandBuilder("create")
@@ -151,7 +150,7 @@ public class Command {
                                     .color(NamedTextColor.GREEN)
                                     .hoverEvent(text("Click to modify fog colors"))
                                     .clickEvent(ClickEvent.runCommand("/biomemanager menu " + key));
-                            MechanicsCore.getPlugin().adventure.sender(sender).sendMessage(component);
+                            sender.sendMessage(component);
                         })))
 
                 .withSubcommand(new CommandBuilder("fill")

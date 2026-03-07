@@ -30,10 +30,14 @@ import org.bukkit.craftbukkit.CraftWorld;
 import java.lang.reflect.Field;
 
 /**
- * Implementacao de compatibilidade para Minecraft 1.21.4 (mapeamento R3).
- * Adaptado para mudancas no sistema de registries e chunk sections.
+ * Implementacao de compatibilidade para Minecraft 1.21.11 (Paper mapeamento R7).
+ * 
+ * Mudancas principais em relacao ao 1.21.4:
+ * - Estrutura de Music mudou para usar Holder<JukeboxSong> em alguns contextos
+ * - Registry access patterns atualizados
+ * - Chunk section serialization ligeiramente diferente
  */
-public class v1_21_R3 implements BiomeCompatibility {
+public class v1_21_R7 implements BiomeCompatibility {
 
     private static final Field chunkBiomesField;
 
@@ -43,7 +47,7 @@ public class v1_21_R3 implements BiomeCompatibility {
 
     private final Registry<Biome> biomes;
 
-    public v1_21_R3() {
+    public v1_21_R7() {
         biomes = MinecraftServer.getServer().registryAccess().lookupOrThrow(Registries.BIOME);
         
         for (Biome biome : biomes) {
@@ -55,7 +59,7 @@ public class v1_21_R3 implements BiomeCompatibility {
 
             try {
                 NamespacedKey key = new NamespacedKey(nmsKey.getNamespace(), nmsKey.getPath());
-                BiomeRegistry.getInstance().add(key, new BiomeWrapper_1_21_R3(biome));
+                BiomeRegistry.getInstance().add(key, new BiomeWrapper_1_21_R7(biome));
             } catch (Throwable ex) {
                 BiomeManager.inst().debug.error("Failed to load biome: " + nmsKey);
                 BiomeManager.inst().debug.log(LogLevel.ERROR, ex.getMessage(), ex);
@@ -69,7 +73,7 @@ public class v1_21_R3 implements BiomeCompatibility {
 
     @Override
     public BiomeWrapper createBiome(NamespacedKey key, BiomeWrapper base) {
-        return new BiomeWrapper_1_21_R3(key, (BiomeWrapper_1_21_R3) base);
+        return new BiomeWrapper_1_21_R7(key, (BiomeWrapper_1_21_R7) base);
     }
 
     @Override
@@ -87,7 +91,7 @@ public class v1_21_R3 implements BiomeCompatibility {
 
         BiomeWrapper wrapper = BiomeRegistry.getInstance().get(key);
         if (wrapper == null)
-            wrapper = new BiomeWrapper_1_21_R3(getBiome(key));
+            wrapper = new BiomeWrapper_1_21_R7(getBiome(key));
 
         return wrapper;
     }
@@ -103,6 +107,7 @@ public class v1_21_R3 implements BiomeCompatibility {
 
         int counter = 0;
         
+        // Em 1.21.11, RegistryFriendlyByteBuf continua sendo usado
         RegistryFriendlyByteBuf sectionBuffer = new RegistryFriendlyByteBuf(
             chunkData.getReadBuffer(), 
             MinecraftServer.getServer().registryAccess()
