@@ -22,7 +22,9 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.Music;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.level.biome.*;
+
 import net.minecraft.util.random.SimpleWeightedRandomList;
+
 import net.minecraft.world.level.chunk.LevelChunk;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
@@ -103,8 +105,12 @@ public class BiomeWrapper_1_21_R3 implements BiomeWrapper {
         Registry<Biome> biomes = MinecraftServer.getServer().registryAccess().lookupOrThrow(Registries.BIOME);
 
         this.key = key;
+
         this.base = biomes
                 .getValue(ResourceLocation.fromNamespaceAndPath(base.getKey().getNamespace(), base.getKey().getKey()));
+
+        this.base = biomes.getValue(ResourceLocation.fromNamespaceAndPath(base.getKey().getNamespace(), base.getKey().getKey()));
+
         reset();
 
         isDirty = true;
@@ -131,8 +137,12 @@ public class BiomeWrapper_1_21_R3 implements BiomeWrapper {
                 .specialEffects(base.getSpecialEffects())
                 .mobSpawnSettings(base.getMobSettings())
                 .generationSettings(base.getGenerationSettings())
+
                 .temperatureAdjustment((Biome.TemperatureModifier) invokeField(temperatureAdjustmentField,
                         invokeField(climateSettingsField, base)))
+
+                .temperatureAdjustment((Biome.TemperatureModifier) invokeField(temperatureAdjustmentField, invokeField(climateSettingsField, base)))
+
                 .build();
 
         if (biome == null) {
@@ -157,15 +167,22 @@ public class BiomeWrapper_1_21_R3 implements BiomeWrapper {
         if (!key.location().getNamespace().equals(NamespacedKey.MINECRAFT))
             return org.bukkit.block.Biome.CUSTOM;
 
-        return org.bukkit.Registry.BIOME.get(NamespacedKey.fromString(key.location().toString()));
+      return org.bukkit.Registry.BIOME.get(NamespacedKey.fromString(key.location().toString()));
+
+        return EnumUtil.getIfPresent(org.bukkit.block.Biome.class, key.location().getPath()).orElse(org.bukkit.block.Biome.CUSTOM);
+
     }
 
     @Override
     public void setBase(org.bukkit.block.Biome biome) {
         Registry<Biome> biomes = MinecraftServer.getServer().registryAccess().lookupOrThrow(Registries.BIOME);
+
         base = biomes
                 .getValue(
                         ResourceLocation.fromNamespaceAndPath(biome.getKey().getNamespace(), biome.getKey().getKey()));
+
+        base = biomes.getValue(ResourceLocation.fromNamespaceAndPath(biome.getKey().getNamespace(), biome.getKey().getKey()));
+
 
         if (base == null)
             throw new IllegalArgumentException("Invalid biome: " + biome);
@@ -184,6 +201,7 @@ public class BiomeWrapper_1_21_R3 implements BiomeWrapper {
 
     public String writeParticle(ParticleOptions particle) {
         if (particle instanceof DustParticleOptions dust) {
+
             return String.format("dust %.2f %.2f %.2f %.2f",
                     dust.getColor().x(),
                     dust.getColor().y(),
@@ -191,6 +209,15 @@ public class BiomeWrapper_1_21_R3 implements BiomeWrapper {
                     dust.getScale());
         }
         return BuiltInRegistries.PARTICLE_TYPE.getKey(particle.getType()).toString();
+
+            return String.format("dust %.2f %.2f %.2f %.2f", 
+                dust.getColor().x(), 
+                dust.getColor().y(), 
+                dust.getColor().z(), 
+                dust.getScale());
+        }
+        return particle.writeToString();
+
     }
 
     @Override
@@ -205,8 +232,12 @@ public class BiomeWrapper_1_21_R3 implements BiomeWrapper {
 
         effects.getGrassColorOverride().ifPresent(builder::setGrassColorOverride);
         effects.getFoliageColorOverride().ifPresent(builder::setFoliageColorOverride);
+
         effects.getAmbientLoopSoundEvent()
                 .ifPresent(holder -> builder.setAmbientSound(holder.value().location().toString()));
+
+        effects.getAmbientLoopSoundEvent().ifPresent(holder -> builder.setAmbientSound(holder.value().location().toString()));
+
 
         if (effects.getAmbientParticleSettings().isPresent()) {
             AmbientParticleSettings particle = effects.getAmbientParticleSettings().get();
@@ -229,6 +260,7 @@ public class BiomeWrapper_1_21_R3 implements BiomeWrapper {
         }
 
         if (effects.getBackgroundMusic().isPresent()) {
+
             // Em 1.21.4, getBackgroundMusic return Optional<Holder<Music>> ou
             // Optional<SimpleWeightedRandomList<Music>>
             // Dependendo da versao exata, mas se o erro diz que e SimpleWeightedRandomList:
@@ -240,6 +272,9 @@ public class BiomeWrapper_1_21_R3 implements BiomeWrapper {
                 // Se for uma lista, pegamos o primeiro elemento
                 music = ((net.minecraft.util.random.SimpleWeightedRandomList<Music>) musicObj).unwrap().get(0).data();
             }
+
+
+            Music music = effects.getBackgroundMusic().get();
 
             builder.setMusicSound(music.getEvent().value().location().toString())
                     .setMusicMinDelay(music.getMinDelay())
@@ -264,8 +299,12 @@ public class BiomeWrapper_1_21_R3 implements BiomeWrapper {
                 .waterColor(builder.getWaterColor())
                 .waterFogColor(builder.getWaterFogColor())
                 .skyColor(builder.getSkyColor())
+
                 .grassColorModifier(BiomeSpecialEffects.GrassColorModifier
                         .valueOf(builder.getGrassColorModifier().trim().toUpperCase()));
+
+                .grassColorModifier(BiomeSpecialEffects.GrassColorModifier.valueOf(builder.getGrassColorModifier().trim().toUpperCase()));
+
 
         if (builder.getGrassColorOverride() != -1) {
             a.grassColorOverride(builder.getGrassColorOverride());
@@ -279,23 +318,35 @@ public class BiomeWrapper_1_21_R3 implements BiomeWrapper {
         if (particle.particle() != null) {
             try {
                 RegistryAccess access = ((CraftServer) Bukkit.getServer()).getServer().registryAccess();
+
                 ParticleOptions nmsParticle = ParticleArgument.readParticle(new StringReader(particle.particle()),
                         access);
+
+                ParticleOptions nmsParticle = ParticleArgument.readParticle(new StringReader(particle.particle()), access);
+
                 a.ambientParticle(new AmbientParticleSettings(nmsParticle, particle.density()));
             } catch (CommandSyntaxException ex) {
                 BiomeManager.inst().debug.log(LogLevel.ERROR, "Could not set particle: " + particle, ex);
             }
         }
         if (caveSettings.sound() != null) {
+
             a.ambientMoodSound(new AmbientMoodSettings(getSound(caveSettings.sound()), caveSettings.tickDelay(),
                     caveSettings.searchOffset(), caveSettings.soundOffset()));
+
+            a.ambientMoodSound(new AmbientMoodSettings(getSound(caveSettings.sound()), caveSettings.tickDelay(), caveSettings.searchOffset(), caveSettings.soundOffset()));
+
         }
         if (cave.sound() != null) {
             a.ambientAdditionsSound(new AmbientAdditionsSettings(getSound(cave.sound()), cave.tickChance()));
         }
         if (music.sound() != null) {
+
             a.backgroundMusic(
                     new Music(getSound(music.sound()), music.minDelay(), music.maxDelay(), music.isOverride()));
+
+            a.backgroundMusic(new Music(getSound(music.sound()), music.minDelay(), music.maxDelay(), music.isOverride()));
+
         }
 
         ReflectionUtil.setField(specialEffectsField, biome, a.build());
@@ -320,8 +371,12 @@ public class BiomeWrapper_1_21_R3 implements BiomeWrapper {
     @Override
     public void register(boolean isCustom) {
         Registry<Biome> biomes = MinecraftServer.getServer().registryAccess().lookupOrThrow(Registries.BIOME);
+
         ResourceKey<Biome> resource = ResourceKey.create(biomes.key(),
                 ResourceLocation.fromNamespaceAndPath(key.getNamespace(), key.getKey()));
+
+        ResourceKey<Biome> resource = ResourceKey.create(biomes.key(), ResourceLocation.fromNamespaceAndPath(key.getNamespace(), key.getKey()));
+
 
         if (!(biomes instanceof WritableRegistry<Biome> writable))
             throw new InternalError(biomes + " was not a writable registry");
@@ -329,6 +384,9 @@ public class BiomeWrapper_1_21_R3 implements BiomeWrapper {
         if (isCustom) {
             // Descongelar o registry temporariamente
             ReflectionUtil.setField(frozenField, biomes, false);
+
+
+
 
             // Criar mapa de intrusive holders se necessario
             Object currentHolders = ReflectionUtil.invokeField(intrusiveHoldersField, biomes);
@@ -368,10 +426,15 @@ public class BiomeWrapper_1_21_R3 implements BiomeWrapper {
 
     @Override
     public boolean equals(Object other) {
+
         if (this == other)
             return true;
         if (!(other instanceof BiomeWrapper biome))
             return false;
+
+        if (this == other) return true;
+        if (!(other instanceof BiomeWrapper biome)) return false;
+
         return key.equals(biome.getKey());
     }
 
